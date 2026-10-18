@@ -1,0 +1,99 @@
+# ===== Java / Maven =====
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+mvnw
+mvnw.cmd
+
+# ===== Spring Boot =====
+*.log
+logs/
+spring-shell.log
+application-*-local.properties
+application-*-local.yml
+
+# ===== IDE - IntelliJ =====
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ===== IDE - Eclipse / STS =====
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+
+# ===== IDE - VS Code =====
+.vscode/
+*.code-workspace
+
+# ===== IDE - NetBeans =====
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ===== Node / React / Vite =====
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+*.local
+
+# npm / yarn / pnpm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.yarn/
+.pnp.*
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing / coverage
+coverage/
+.nyc_output/
+
+# ===== Environment / secrets =====
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===== Confidential / internal reference (never publish) =====
+SRS.html
+SRS*.html
+SRS*.pdf
+SRS*.docx
+
+# ===== Local utilities (not part of the application) =====
+/test.py
+
+# ===== Misc =====
+*.bak
+*.tmp
+*.swp
+*.orig

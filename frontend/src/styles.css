@@ -1,0 +1,66 @@
+:root {
+  --brand: #1e8a5f;
+  --brand-dark: #146447;
+  --brand-light: #d5f0e2;
+  --sidebar-bg: #0f2a24;
+  --sidebar-fg: #d8ecd8;
+  --border: #dee2e6;
+  --text: #212529;
+  --muted: #6c757d;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); background: #f6f8fa; }
+
+.app-shell { display: flex; min-height: 100vh; }
+.app-sidebar {
+  width: 240px; background: var(--sidebar-bg); color: var(--sidebar-fg);
+  display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0;
+}
+.app-sidebar .brand { padding: 0 22px 20px; font-size: 1.15rem; font-weight: 700; border-bottom: 1px solid #204a3d; }
+.app-sidebar nav a {
+  display: flex; align-items: center; gap: 10px; color: #cfe6d5; padding: 10px 22px;
+  text-decoration: none; border-left: 4px solid transparent; font-size: 14px;
+}
+.app-sidebar nav a:hover { background: #143a30; color: #fff; }
+.app-sidebar nav a.active { background: #143a30; color: #fff; border-left-color: var(--brand); }
+.app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.app-header {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 20;
+}
+.app-header .title { font-weight: 700; color: var(--brand-dark); }
+.app-content { padding: 24px; flex: 1; }
+.app-footer {
+  background: #fff; border-top: 1px solid var(--border);
+  padding: 12px 24px; text-align: center; color: var(--muted); font-size: 13px;
+}
+.stat-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.stat-card .label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .8px; }
+.stat-card .value { font-size: 1.9rem; font-weight: 700; color: var(--brand-dark); margin-top: 4px; }
+
+.btn-brand { background: var(--brand); color: #fff; border: none; }
+.btn-brand:hover { background: var(--brand-dark); color: #fff; }
+.badge-status { padding: .35em .6em; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+.badge-PENDING    { background: #fff3cd; color: #664d03; }
+.badge-CONFIRMED  { background: #cfe2ff; color: #084298; }
+.badge-CHECKED_IN { background: #d1e7dd; color: #0f5132; }
+.badge-COMPLETED  { background: #d4edda; color: #155724; }
+.badge-CANCELLED  { background: #f8d7da; color: #842029; }
+.badge-ACTIVE     { background: #d4edda; color: #155724; }
+.badge-INACTIVE   { background: #f8d7da; color: #842029; }
+
+.card-panel { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.link-plain { color: var(--brand-dark); text-decoration: none; }
+.link-plain:hover { text-decoration: underline; }
+
+@media (max-width: 991px) {
+  .app-shell { flex-direction: column; }
+  .app-sidebar { width: 100%; }
+  .app-sidebar nav { display: flex; flex-wrap: wrap; }
+  .app-sidebar nav a { padding: 8px 12px; }
+}
