@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthAPI } from '../api/services';
 import { extractMessage } from '../api/axios';
+import { AuthLayout } from '../components/ui';
 
 const Register = () => {
   const [fullName, setFullName] = useState('');
@@ -24,34 +25,45 @@ const Register = () => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100" style=
-    {{ background: 'linear-gradient(135deg, #146447, #1e8a5f)' }}>
-      <div className="card-panel" style={{ width: 420 }}>
-        <h3 className="mb-1 text-center" style={{ color: '#146447' }}>Create Account</h3>
-        <p className="text-center text-muted mb-4">Join the Sports Arena Booking System</p>
-        {err && <div className="alert alert-danger py-2">{err}</div>}
-        {msg && <div className="alert alert-success py-2">{msg}</div>}
-        <form onSubmit={submit}>
-          <div className="mb-3">
-            <label className="form-label">Full Name</label>
-            <input className="form-control" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+    <AuthLayout>
+      <h3>Create account</h3>
+      <p className="sub">Join the Sports Arena Booking System</p>
+      {err && <div className="alert alert-danger py-2" role="alert">{err}</div>}
+      {msg && <div className="alert alert-success py-2" role="status">{msg}</div>}
+      <form onSubmit={submit}>
+        <div className="mb-3">
+          <label className="form-label" htmlFor="reg-name">Full Name</label>
+          <div className="input-icon">
+            <i className="bi bi-person" aria-hidden="true"></i>
+            <input id="reg-name" className="form-control" autoComplete="name" value={fullName}
+              onChange={(e) => setFullName(e.target.value)} required />
           </div>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input type="email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input type="password" className="form-control" minLength={6} value={password}
-             onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-          <button className="btn btn-brand w-100" disabled={busy}>{busy ? 'Creating…' : 'Register'}</button>
-        </form>
-        <div className="text-center mt-3 small">
-          Already have an account? <Link to="/login" className="link-plain">Sign In</Link>
         </div>
+        <div className="mb-3">
+          <label className="form-label" htmlFor="reg-email">Email</label>
+          <div className="input-icon">
+            <i className="bi bi-envelope" aria-hidden="true"></i>
+            <input id="reg-email" type="email" className="form-control" autoComplete="email" placeholder="you@example.com"
+              value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="form-label" htmlFor="reg-password">Password</label>
+          <div className="input-icon">
+            <i className="bi bi-lock" aria-hidden="true"></i>
+            <input id="reg-password" type="password" className="form-control" minLength={6} autoComplete="new-password"
+              aria-describedby="reg-password-help" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          <div id="reg-password-help" className="form-text">At least 6 characters.</div>
+        </div>
+        <button className="btn btn-brand w-100" disabled={busy}>
+          {busy ? <><span className="spinner-border" aria-hidden="true"></span> Creating…</> : 'Register'}
+        </button>
+      </form>
+      <div className="switch">
+        Already have an account? <Link to="/login" className="link-plain">Sign In</Link>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

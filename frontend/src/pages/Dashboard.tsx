@@ -4,11 +4,30 @@ import type { DashboardSummary } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { extractMessage } from '../api/axios';
 import { Link } from 'react-router-dom';
+import { EmptyRow, PageHeader, StatusBadge } from '../components/ui';
 
-const Stat = ({ label, value }: { label: string; value: number | string }) => (
-  <div className="stat-card">
-    <div className="label">{label}</div>
-    <div className="value">{value}</div>
+const Stat = ({ label, value, icon, tone }: { label: string; value: number | string; icon: string; tone: string }) => (
+  <div className={`stat-card tone-${tone}`}>
+    <div className="stat-icon" aria-hidden="true"><i className={`bi ${icon}`}></i></div>
+    <div>
+      <div className="label">{label}</div>
+      <div className="value">{value}</div>
+    </div>
+  </div>
+);
+
+const greeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+};
+
+const DashboardSkeleton = () => (
+  <div aria-busy="true" aria-label="Loading dashboard">
+    <div className="skeleton mb-4" style={{ height: 46, width: 320 }} />
+    <div className="row g-3 mb-4">
+      {[0, 1, 2, 3].map((i) => <div className="col-6 col-lg-3" key={i}><div className="skeleton" style={{ height: 92 }} /></div>)}
+    </div>
+    <div className="skeleton" style={{ height: 150 }} />
   </div>
 );
 
@@ -21,38 +40,45 @@ const Dashboard = () => {
     BookingAPI.dashboard().then(setD).catch((e) => setErr(extractMessage(e)));
   }, []);
 
-  if (err) return <div className="alert alert-danger">{err}</div>;
-  if (!d) return <div>Loading…</div>;
+  if (err) return <div className="alert alert-danger" role="alert">{err}</div>;
+  if (!d) return <DashboardSkeleton />;
+
+  const statusTotal = Object.values(d.bookingsByStatus).reduce((a, b) => a + b, 0);
 
   return (
     <>
-      <h4 className="mb-4">Welcome, {session?.fullName} 👋</h4>
+      <PageHeader icon="bi-speedometer2" title={<>Welcome, {session?.fullName} 👋</>}
+        subtitle={`${greeting()} — here's what's happening ${isAdmin ? 'across the platform' : 'with your bookings'}.`} />
+
       <div className="row g-3 mb-4">
         {isAdmin ? (
           <>
-            <div className="col-md-3"><Stat label="Customers" value={d.totalCustomers ?? 0} /></div>
-            <div className="col-md-3"><Stat label="Categories" value={d.totalCategories ?? 0} /></div>
-            <div className="col-md-3"><Stat label="Active Packages" value={d.totalPackages ?? 0} /></div>
-            <div className="col-md-3"><Stat label="Total Bookings" value={d.totalBookings} /></div>
+            <div className="col-6 col-lg-3"><Stat label="Customers" value={d.totalCustomers ?? 0} icon="bi-people" tone="blue" /></div>
+            <div className="col-6 col-lg-3"><Stat label="Categories" value={d.totalCategories ?? 0} icon="bi-tags" tone="purple" /></div>
+            <div className="col-6 col-lg-3"><Stat label="Active Packages" value={d.totalPackages ?? 0} icon="bi-trophy" tone="amber" /></div>
+            <div className="col-6 col-lg-3"><Stat label="Total Bookings" value={d.totalBookings} icon="bi-calendar-check" tone="green" /></div>
           </>
         ) : (
           <>
-            <div className="col-md-3"><Stat label="My Teams" value={d.totalTeams ?? 0} /></div>
-            <div className="col-md-3"><Stat label="Total Bookings" value={d.totalBookings} /></div>
-            <div className="col-md-3"><Stat label="Active" value={d.activeBookings ?? 0} /></div>
-            <div className="col-md-3"><Stat label="Completed" value={d.completedBookings ?? 0} /></div>
+            <div className="col-6 col-lg-3"><Stat label="My Teams" value={d.totalTeams ?? 0} icon="bi-people-fill" tone="blue" /></div>
+            <div className="col-6 col-lg-3"><Stat label="Total Bookings" value={d.totalBookings} icon="bi-calendar-check" tone="green" /></div>
+            <div className="col-6 col-lg-3"><Stat label="Active" value={d.activeBookings ?? 0} icon="bi-lightning-charge" tone="amber" /></div>
+            <div className="col-6 col-lg-3"><Stat label="Completed" value={d.completedBookings ?? 0} icon="bi-check2-circle" tone="purple" /></div>
           </>
         )}
       </div>
 
       <div className="card-panel mb-4">
-        <h6 className="mb-3">Bookings by Status</h6>
+        <h6 className="mb-3"><i className="bi bi-bar-chart" aria-hidden="true"></i> Bookings by Status</h6>
         <div className="row g-2">
           {Object.entries(d.bookingsByStatus).map(([k, v]) => (
-            <div className="col-6 col-md-2" key={k}>
-              <div className="text-center border rounded p-2">
-                <div className="small text-muted">{k}</div>
-                <div className="fs-5 fw-bold">{v}</div>
+            <div className="col-6 col-md-4 col-xl" key={k}>
+              <div className={`status-tile st-${k}`}>
+                <div className="st-label">{k}</div>
+                <div className="st-value">{v}</div>
+                <div className="st-bar" aria-hidden="true">
+                  <span style={{ width: `${statusTotal ? Math.round((v / statusTotal) * 100) : 0}%` }} />
+                </div>
               </div>
             </div>
           ))}
@@ -61,7 +87,10 @@ const Dashboard = () => {
 
       {isAdmin && (
         <div className="card-panel mb-4">
-          <h6 className="mb-3">Recent Booking Activity</h6>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6 className="section-title m-0"><i className="bi bi-clock-history" aria-hidden="true"></i> Recent Booking Activity</h6>
+            <Link to="/bookings" className="link-plain small">View all <i className="bi bi-arrow-right" aria-hidden="true"></i></Link>
+          </div>
           <div className="table-responsive">
             <table className="table align-middle mb-0">
               <thead><tr><th>Reference</th><th>Customer</th><th>Package</th><th>Date</th><th>Slot</th><th>Status
@@ -69,16 +98,16 @@ const Dashboard = () => {
               <tbody>
                 {(d.recentBookings ?? []).map((b) => (
                   <tr key={b.id}>
-                    <td className="fw-semibold">{b.referenceNumber}</td>
+                    <td className="fw-semibold mono">{b.referenceNumber}</td>
                     <td>{b.customerName}</td>
                     <td>{b.packageName}</td>
                     <td>{b.bookingDate}</td>
                     <td>{b.timeSlot}</td>
-                    <td><span className={`badge-status badge-${b.status}`}>{b.status}</span></td>
+                    <td><StatusBadge status={b.status} /></td>
                   </tr>
                 ))}
                 {(d.recentBookings ?? []).length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-muted py-3">No recent bookings.</td></tr>
+                  <EmptyRow colSpan={6} icon="bi-calendar-x" title="No recent bookings." />
                 )}
               </tbody>
             </table>
@@ -87,10 +116,21 @@ const Dashboard = () => {
       )}
 
       {!isAdmin && (
-        <div className="d-flex gap-2">
-          <Link to="/arenas" className="btn btn-brand"><i className="bi bi-search"></i> Browse Arenas</Link>
-          <Link to="/bookings/new" className="btn btn-outline-secondary"><i className="bi bi-calendar-plus"></i> New Booking
-          </Link>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <Link to="/arenas" className="quick-action">
+              <span className="qa-icon" aria-hidden="true"><i className="bi bi-search"></i></span>
+              <span><span className="qa-title d-block">Browse Arenas</span><span className="qa-sub">Explore turfs, courts and pools</span></span>
+              <i className="bi bi-arrow-right" aria-hidden="true"></i>
+            </Link>
+          </div>
+          <div className="col-md-6">
+            <Link to="/bookings/new" className="quick-action secondary">
+              <span className="qa-icon" aria-hidden="true"><i className="bi bi-calendar-plus"></i></span>
+              <span><span className="qa-title d-block">New Booking</span><span className="qa-sub">Reserve a slot for one of your teams</span></span>
+              <i className="bi bi-arrow-right" aria-hidden="true"></i>
+            </Link>
+          </div>
         </div>
       )}
     </>

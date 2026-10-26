@@ -2,14 +2,16 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { CategoryAPI } from '../api/services';
 import type { ArenaCategory } from '../types';
 import { extractMessage } from '../api/axios';
+import { EmptyRow, PageHeader } from '../components/ui';
 
 const Categories = () => {
   const [rows, setRows] = useState<ArenaCategory[]>([]);
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState<ArenaCategory | null>(null);
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const load = () => CategoryAPI.list().then(setRows).catch((e) => setErr(extractMessage(e)));
+  const load = () => CategoryAPI.list().then(setRows).catch((e) => setErr(extractMessage(e))).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   const filtered = rows.filter((c) =>
@@ -34,58 +36,63 @@ const Categories = () => {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="m-0">Arena Categories</h5>
-        <button className="btn btn-brand btn-sm" onClick={() => setEditing({ name: '', description: '' })}>
-          <i className="bi bi-plus-lg"></i> New Category</button>
-      </div>
-      {err && <div className="alert alert-danger py-2">{err}</div>}
+      <PageHeader icon="bi-tags" title="Arena Categories" subtitle="Group arena packages so customers can browse them easily"
+        actions={<button className="btn btn-brand" onClick={() => setEditing({ name: '', description: '' })}>
+          <i className="bi bi-plus-lg" aria-hidden="true"></i> New Category</button>} />
+      {err && <div className="alert alert-danger py-2" role="alert">{err}</div>}
 
-      <div className="card-panel mb-3">
-        <input className="form-control" placeholder="Filter by name or description" value={q} onChange={(e) =>
-           setQ(e.target.value)} />
+      <div className="card-panel filters mb-3">
+        <div className="input-icon">
+          <i className="bi bi-search" aria-hidden="true"></i>
+          <input className="form-control" placeholder="Filter by name or description" aria-label="Filter categories" value={q} onChange={(e) =>
+             setQ(e.target.value)} />
+        </div>
       </div>
 
       <div className="card-panel">
-        <table className="table align-middle">
-          <thead><tr><th>Code</th><th>Name</th><th>Description</th><th></th></tr></thead>
-          <tbody>
-            {filtered.map((c) => (
-              <tr key={c.id}>
-                <td className="small text-muted">{c.categoryCode}</td>
-                <td className="fw-semibold">{c.name}</td>
-                <td>{c.description}</td>
-                <td className="text-end">
-                  <button className="btn btn-sm btn-outline-secondary me-1" onClick={() => setEditing({ ...c })}>
-                    <i className="bi bi-pencil"></i></button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => remove(c.id!)}>
-                    <i className="bi bi-trash"></i></button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No categories</td></tr>}
-          </tbody>
-        </table>
+        <div className="table-responsive">
+          <table className="table align-middle">
+            <thead><tr><th>Code</th><th>Name</th><th>Description</th><th><span className="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+              {filtered.map((c) => (
+                <tr key={c.id}>
+                  <td><span className="chip mono">{c.categoryCode}</span></td>
+                  <td className="fw-semibold">{c.name}</td>
+                  <td className="text-muted">{c.description}</td>
+                  <td className="text-end row-actions">
+                    <button className="btn btn-sm btn-outline-secondary btn-icon me-1" onClick={() => setEditing({ ...c })}
+                      aria-label={`Edit ${c.name}`} title="Edit">
+                      <i className="bi bi-pencil" aria-hidden="true"></i></button>
+                    <button className="btn btn-sm btn-outline-danger btn-icon" onClick={() => remove(c.id!)}
+                      aria-label={`Delete ${c.name}`} title="Delete">
+                      <i className="bi bi-trash" aria-hidden="true"></i></button>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <EmptyRow colSpan={4} loading={loading} icon="bi-tags" title="No categories" />}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {editing && (
-        <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,.4)' }}>
-          <div className="modal-dialog"><div className="modal-content">
+        <div className="modal show d-block" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="cat-modal-title">
+          <div className="modal-dialog modal-dialog-centered"><div className="modal-content">
             <form onSubmit={save}>
               <div className="modal-header">
-                <h5 className="modal-title">{editing.id ? 'Edit Category' : 'New Category'}</h5>
-                <button type="button" className="btn-close" onClick={() => setEditing(null)}></button>
+                <h5 className="modal-title" id="cat-modal-title">{editing.id ? 'Edit Category' : 'New Category'}</h5>
+                <button type="button" className="btn-close" aria-label="Close" onClick={() => setEditing(null)}></button>
               </div>
               <div className="modal-body">
-                <div className="mb-3"><label className="form-label">Name</label><input className="form-control" 
+                <div className="mb-3"><label className="form-label" htmlFor="cat-name">Name</label><input id="cat-name" className="form-control"
                 value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} required /></div>
-                <div className="mb-3"><label className="form-label">Description
-                  </label><textarea className="form-control" rows={3} value={editing.description ?? ''} onChange={(e) => 
+                <div className="mb-3"><label className="form-label" htmlFor="cat-desc">Description
+                  </label><textarea id="cat-desc" className="form-control" rows={3} value={editing.description ?? ''} onChange={(e) =>
                     setEditing({ ...editing, description: e.target.value })} /></div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline-secondary" onClick={() => setEditing(null)}>Cancel</button>
-                <button className="btn btn-brand" type="submit">Save</button>
+                <button className="btn btn-brand" type="submit"><i className="bi bi-check2" aria-hidden="true"></i> Save</button>
               </div>
             </form>
           </div></div>

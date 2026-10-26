@@ -3,6 +3,7 @@ import { BookingAPI, PackageAPI, SlotAPI } from '../api/services';
 import type { ArenaPackage, SlotAvailability } from '../types';
 import { TIME_SLOTS } from '../types';
 import { extractMessage } from '../api/axios';
+import { PageHeader } from '../components/ui';
 
 const today = new Date().toISOString().substring(0, 10);
 
@@ -73,52 +74,63 @@ const Slots = () => {
     }
   };
 
+  // Display-only counts for the legend.
+  const bookedCount = TIME_SLOTS.filter((s) => booked[s]).length;
+  const blockedCount = TIME_SLOTS.filter((s) => !booked[s] && rows.find((r) => r.timeSlot === s)?.blocked).length;
+  const freeCount = TIME_SLOTS.length - bookedCount - blockedCount;
+
   return (
     <>
-      <h5 className="mb-3">Slot Availability Management</h5>
-      {err && <div className="alert alert-danger py-2">{err}</div>}
+      <PageHeader icon="bi-calendar3-week" title="Slot Availability Management"
+        subtitle="Block slots for maintenance or events. Booked slots are locked until the booking is cancelled." />
+      {err && <div className="alert alert-danger py-2" role="alert">{err}</div>}
 
-      <div className="card-panel mb-3">
+      <div className="card-panel filters mb-3">
         <div className="row g-2 align-items-end">
-          <div className="col-md-6">
-            <label className="form-label">Arena Package</label>
-            <select className="form-select" value={packageId} onChange={(e) => 
+          <div className="col-md-7 col-lg-6">
+            <label className="form-label" htmlFor="slot-pkg">Arena Package</label>
+            <select id="slot-pkg" className="form-select" value={packageId} onChange={(e) =>
               setPackageId(e.target.value ? +e.target.value : '')}>
               {pkgs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="col-md-4">
-            <label className="form-label">Date</label>
-            <input type="date" className="form-control" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
+          <div className="col-md-5 col-lg-3">
+            <label className="form-label" htmlFor="slot-date">Date</label>
+            <input id="slot-date" type="date" className="form-control" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
           </div>
         </div>
       </div>
 
       <div className="card-panel">
-        <h6 className="mb-2">Slots for {date}</h6>
-        <div className="d-flex flex-wrap gap-3 mb-3 small text-muted">
-          <span><span className="badge bg-success">&nbsp;</span> Booked by customer</span>
-          <span><span className="badge bg-danger">&nbsp;</span> Blocked by admin</span>
-          <span><span className="badge bg-white border border-success">&nbsp;</span> Available</span>
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <h6 className="section-title m-0"><i className="bi bi-clock" aria-hidden="true"></i> Slots for {date}</h6>
+          <div className="slot-legend">
+            <span><span className="sw" style={{ background: 'var(--completed)' }}></span>Booked by customer ({bookedCount})</span>
+            <span><span className="sw" style={{ background: 'var(--cancelled-bg)', border: '1.5px solid #f2b8b0' }}></span>Blocked by admin ({blockedCount})</span>
+            <span><span className="sw" style={{ background: '#fff', border: '1.5px solid #b9e3cd' }}></span>Available ({freeCount})</span>
+          </div>
         </div>
         <div className="row g-2">
           {TIME_SLOTS.map((s) => {
             const row = rows.find((r) => r.timeSlot === s);
             const blocked = row?.blocked ?? false;
             const bookedStatus = booked[s];
-            const cls = bookedStatus ? 'btn-success' : blocked ? 'btn-danger' : 'btn-outline-success';
+            const cls = bookedStatus ? 'booked' : blocked ? 'blocked' : 'free';
+            const icon = bookedStatus ? 'bi-person-check-fill' : blocked ? 'bi-lock-fill' : 'bi-unlock';
+            const label = bookedStatus ? `${s}, booked (${bookedStatus})`
+              : blocked ? `${s}, blocked. Click to unblock` : `${s}, available. Click to block`;
             return (
-              <div className="col-6 col-md-3" key={s}>
-                <button className={`btn w-100 ${cls}`} onClick={() => toggle(s)}>
-                  <div className="fw-bold">{s}</div>
+              <div className="col-6 col-md-4 col-xl-3" key={s}>
+                <button type="button" className={`slot-tile ${cls}`} onClick={() => toggle(s)} aria-label={label}>
+                  <div className="slot-time">{s} <i className={`bi ${icon}`} aria-hidden="true"></i></div>
                   {bookedStatus ? (
-                    <div className="small">Booked · {bookedStatus}</div>
+                    <div className="slot-state">Booked · {bookedStatus}</div>
                   ) : blocked ? (
-                    <div className="small">Blocked · click to unblock</div>
+                    <div className="slot-state">Blocked · click to unblock</div>
                   ) : (
-                    <div className="small">Available · click to block</div>
+                    <div className="slot-state">Available · click to block</div>
                   )}
-                  {!bookedStatus && blocked && row?.reason && <div className="small fst-italic">“{row.reason}”</div>}
+                  {!bookedStatus && blocked && row?.reason && <div className="slot-reason">“{row.reason}”</div>}
                 </button>
               </div>
             );

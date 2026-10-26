@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthAPI } from '../api/services';
 import { useAuth } from '../context/AuthContext';
 import { extractMessage } from '../api/axios';
+import { AuthLayout } from '../components/ui';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -25,29 +26,35 @@ const Login = () => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100" style=
-    {{ background: 'linear-gradient(135deg, #146447, #1e8a5f)' }}>
-      <div className="card-panel" style={{ width: 400 }}>
-        <h3 className="mb-1 text-center" style={{ color: '#146447' }}>🏟️ Sports Arena</h3>
-        <p className="text-center text-muted mb-4">Sign in to your account</p>
-        {error && <div className="alert alert-danger py-2">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="login-email">Email</label>
-            <input id="login-email" type="email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} required />
+    <AuthLayout>
+      <h3>Welcome back</h3>
+      <p className="sub">Sign in to your account</p>
+      {error && <div className="alert alert-danger py-2" role="alert">{error}</div>}
+      <form onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label className="form-label" htmlFor="login-email">Email</label>
+          <div className="input-icon">
+            <i className="bi bi-envelope" aria-hidden="true"></i>
+            <input id="login-email" type="email" className="form-control" autoComplete="email" placeholder="you@example.com"
+              value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-          <div className="mb-3">
-            <label className="form-label" htmlFor="login-password">Password</label>
-            <input id="login-password" type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} 
-            required />
-          </div>
-          <button className="btn btn-brand w-100" disabled={busy}>{busy ? 'Signing in…' : 'Sign In'}</button>
-        </form>
-        <div className="text-center mt-3 small">
-          New here? <Link to="/register" className="link-plain">Create an account</Link>
         </div>
+        <div className="mb-4">
+          <label className="form-label" htmlFor="login-password">Password</label>
+          <div className="input-icon">
+            <i className="bi bi-lock" aria-hidden="true"></i>
+            <input id="login-password" type="password" className="form-control" autoComplete="current-password"
+              value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+        </div>
+        <button className="btn btn-brand w-100" disabled={busy}>
+          {busy ? <><span className="spinner-border" aria-hidden="true"></span> Signing in…</> : <>Sign In <i className="bi bi-arrow-right" aria-hidden="true"></i></>}
+        </button>
+      </form>
+      <div className="switch">
+        New here? <Link to="/register" className="link-plain">Create an account</Link>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 
