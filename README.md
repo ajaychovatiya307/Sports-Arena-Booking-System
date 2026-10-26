@@ -20,6 +20,7 @@ Customers register, manage their teams, browse arena packages and book hourly sl
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [Deployment](#deployment)
 - [API Overview](#api-overview)
 - [Testing](#testing)
 - [Design Notes and Limitations](#design-notes-and-limitations)
@@ -123,6 +124,8 @@ flowchart LR
 
 ```text
 .
+├── render.yaml                         # Render Blueprint for the five backend services
+├── DEPLOYMENT.md                       # Free-tier deployment guide (Vercel + Render + TiDB)
 ├── backend/
 │   ├── pom.xml                         # Parent POM: Boot 3.2.4, Spring Cloud BOM, JaCoCo, Sonar
 │   ├── seed-all.sql                    # Runs all four seed scripts in one go
@@ -136,7 +139,7 @@ flowchart LR
 │           ├── controller/  service/  repository/
 │           ├── entity/      dto/      config/   exception/
 │           └── BookingServiceApplication.java
-│       (each service also has src/main/resources/application.properties + tablescript.sql)
+│       (each service also has a Dockerfile, src/main/resources/application.properties and tablescript.sql)
 └── frontend/
     ├── src/
     │   ├── api/          # Axios instance (headers, 401 handling) and typed API clients
@@ -145,6 +148,7 @@ flowchart LR
     │   ├── pages/        # 13 screens: Dashboard, Teams, ArenaBrowse, BookingForm, Slots, Reports, …
     │   └── types.ts      # Shared DTO types and the TIME_SLOTS list
     ├── jest.config.cjs
+    ├── vercel.json   # SPA rewrites for Vercel
     └── vite.config.ts
 ```
 
@@ -163,16 +167,23 @@ Every backend service uses the same layered packages: `controller → service �
 
 Ports **8080–8084** and **5173** must be free.
 
-### 1. Configure the database connection
+### 1. Configure the services
 
-Each service reads its MySQL settings from its own `src/main/resources/application.properties`. Don't commit real credentials. Override them with environment variables, which take precedence through Spring Boot's relaxed binding:
+Every setting reads an environment variable and falls back to a local default, so with MySQL on `localhost:3306` (user `root`) nothing needs to be set.
+
+| Variable | Used by | Local default |
+|---|---|---|
+| `PORT` | all services | 8080 / 8081 / 8082 / 8083 / 8084 |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | auth, user, catalog, booking | `jdbc:mysql://localhost:3306/<service>_db?createDatabaseIfNotExist=true`, `root` |
+| `AUTH_SERVICE_URL`, `USER_SERVICE_URL`, `CATALOG_SERVICE_URL`, `BOOKING_SERVICE_URL` | gateway and callers | `http://localhost:8081` … `8084` |
+| `CORS_ALLOWED_ORIGINS` | gateway | `*` (comma-separated patterns, e.g. `https://*.vercel.app`) |
+| `VITE_API_BASE_URL` | frontend build | `http://localhost:8080` |
+
+To use a different MySQL password, set it in every terminal you start a service from:
 
 ```bash
-export SPRING_DATASOURCE_USERNAME=root
-export SPRING_DATASOURCE_PASSWORD='<your-mysql-password>'
+export DB_PASSWORD='<your-mysql-password>'
 ```
-
-Set these in every terminal you use to start a service.
 
 ### 2. Load the demo data (optional, recommended)
 
@@ -210,22 +221,27 @@ npm install
 npm run dev
 ```
 
-Vite serves the app at **http://localhost:5173** and opens it in your browser. If 5173 is taken, Vite picks the next free port; the gateway's CORS rules accept any origin.
+Vite serves the app at **http://localhost:5173** and opens it in your browser. If 5173 is taken, Vite picks the next free port; by default the gateway's CORS rules accept any origin.
 
 <details>
 <summary><b>Ports already in use?</b></summary>
 
-The gateway must stay on **8080**, because the frontend calls `http://localhost:8080`. The other services can move. Every service needs the new addresses so the services can still find each other, so pass the same overrides to all five, plus the new `--server.port` for each moved service. For example, to move auth-service to 9081:
+Move any service with `PORT`, and tell the others where it went with the matching `*_SERVICE_URL`. Export the URLs in every terminal so all five services agree. For example, to move auth-service to 9081:
 
 ```bash
-java -jar auth-service/target/auth-service-0.0.1-SNAPSHOT.jar \
-  --server.port=9081 \
-  "--spring.cloud.discovery.client.simple.instances.auth-service[0].uri=http://localhost:9081"
+export AUTH_SERVICE_URL=http://localhost:9081
+PORT=9081 java -jar auth-service/target/auth-service-0.0.1-SNAPSHOT.jar
 ```
 
-Add the matching `…instances.<service>[0].uri` override for every service you move. `--spring.datasource.url=jdbc:mysql://localhost:3306/<db>?createDatabaseIfNotExist=true` points a service at a different database.
+If the gateway moves off 8080, start the frontend with `VITE_API_BASE_URL=http://localhost:<port> npm run dev`.
 
 </details>
+
+## Deployment
+
+The project deploys on free tiers: the frontend to **Vercel**, the five services to **Render** (Docker), and the data to **TiDB Cloud Starter** (MySQL-compatible). Each service has a `Dockerfile` (build context `backend/`), and [render.yaml](render.yaml) creates all five services in one Blueprint. Step-by-step instructions are in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Render's free services sleep after 15 minutes without traffic, so the first request after a quiet period takes about a minute while they start.
 
 ## API Overview
 

@@ -1,0 +1,128 @@
+# Render Blueprint: creates the 5 backend services on the free plan.
+# Render → New → Blueprint → select this repo. Values marked `sync: false` are
+# asked for once during creation (see DEPLOYMENT.md for what to paste).
+#
+# Services call each other over their public https://<name>.onrender.com URLs
+# because free instances cannot receive private-network traffic.
+
+services:
+  - type: web
+    name: sports-arena-gateway
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/gateway-service/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - backend/pom.xml
+        - backend/gateway-service/**
+    envVars:
+      - key: AUTH_SERVICE_URL
+        sync: false
+      - key: USER_SERVICE_URL
+        sync: false
+      - key: CATALOG_SERVICE_URL
+        sync: false
+      - key: BOOKING_SERVICE_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
+    name: sports-arena-auth
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/auth-service/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - backend/pom.xml
+        - backend/auth-service/**
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: USER_SERVICE_URL
+        sync: false
+
+  - type: web
+    name: sports-arena-user
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/user-service/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - backend/pom.xml
+        - backend/user-service/**
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: AUTH_SERVICE_URL
+        sync: false
+      - key: BOOKING_SERVICE_URL
+        sync: false
+
+  - type: web
+    name: sports-arena-catalog
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/catalog-service/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - backend/pom.xml
+        - backend/catalog-service/**
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: BOOKING_SERVICE_URL
+        sync: false
+
+  - type: web
+    name: sports-arena-booking
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/booking-service/Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - backend/pom.xml
+        - backend/booking-service/**
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: USER_SERVICE_URL
+        sync: false
+      - key: CATALOG_SERVICE_URL
+        sync: false

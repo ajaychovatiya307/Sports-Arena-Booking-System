@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// Injected by Vite at build time from VITE_API_BASE_URL (see vite.config.ts).
+// Undefined under Jest, so fall back to the local gateway.
+declare const __API_BASE_URL__: string | undefined;
+const API_BASE_URL = typeof __API_BASE_URL__ !== 'undefined' ? __API_BASE_URL__ : 'http://localhost:8080';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' }
 });
 
