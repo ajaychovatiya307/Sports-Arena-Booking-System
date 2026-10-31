@@ -46,7 +46,9 @@ You need the code in a GitHub repository (Render and Vercel deploy from GitHub).
    | `CORS_ALLOWED_ORIGINS` (gateway) | `https://*.vercel.app` for now; tightened in step 4 |
 
 4. Click **Apply**. The first Docker builds take several minutes each.
-5. **Check the real URLs.** Render uses `https://<service-name>.onrender.com` unless the name is taken, in which case it adds a suffix. Open each service in the dashboard; if a URL differs from the table above, fix the matching `*_SERVICE_URL` in **Environment** on every service that uses it (Render restarts the service).
+5. **Check the real URLs.** Render uses `https://<service-name>.onrender.com` unless the name is taken, in which case it adds a suffix (e.g. `sports-arena-booking-n9r2.onrender.com`). Open each service in the dashboard; if a URL differs from the table above, fix the matching `*_SERVICE_URL` in **Environment** on every service that uses it (Render restarts the service).
+
+   A green deploy and a passing health check are not enough: the un-suffixed address may belong to **someone else's** app, which can also answer `/actuator/health`. Confirm with an endpoint only this project has, e.g. `https://<booking-url>/api/bookings/booked-slots?packageId=1&date=2030-01-01` should return `[]`.
 6. Open `https://<each-service>.onrender.com/actuator/health`. All five should return `{"status":"UP"}`.
 
 ## 3. Frontend: Vercel
